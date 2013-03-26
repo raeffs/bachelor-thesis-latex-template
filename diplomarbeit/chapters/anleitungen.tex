@@ -1,0 +1,144 @@
+\chapter{Anleitungen}
+
+\section{Build- und Testserver Setup}
+
+Als Build- und Testserver wird ein Ubuntu Server in der Version 12.10 eingesetzt. Auf dem Server laufen Jenkins und zwei Glassfish Domains. Jenkins baut die Applikation automatisch auf Basis der aktuellen Sourcen und deployt diese auf die Glassfish Domains. Diese Anleitung dient zum Aufsetzen des Servers.
+
+\subsection{Java Installation}
+
+Java kann bequem über die integrierte Paketverwaltung installiert werden (Listing \ref{lst:javainstall}); es wird das OpenJDK 7 verwendet.
+
+\lstinputlisting[caption=Java Installation, label=lst:javainstall, firstline=3, lastline=3]{listings/anleitungen/build-env-setup}
+
+\subsection{Jetty Installation}
+
+Da Jenkins einen Servlet-Container voraussetzt, wird zunächst Jetty installiert. Listing \ref{lst:jettyinstall} legt einen neuen Benutzer für Jetty an, lädt die Binaries herunter und installiert Jetty. Die aktuelle Version von Jetty kann jeweils unter http://download.eclipse.org/jetty bezogen werden.
+
+\lstinputlisting[caption=Jetty Installation, label=lst:jettyinstall, firstline=7, lastline=14]{listings/anleitungen/build-env-setup}
+
+Als nächstes muss Jetty konfiguriert werden. Dazu wird die Konfigurationsdatei '/etc/default/jetty' erstellt und der Inhalt von Listing \ref{lst:jettyconfig} eingefügt.
+
+\lstinputlisting[caption=Jetty Konfiguration (/etc/default/jetty), label=lst:jettyconfig, firstline=20, lastline=23]{listings/anleitungen/build-env-setup}
+
+Mit Listing \ref{lst:jettyinstall2} wird Jetty anschliessend als Service eingerichtet und gestartet. Ausserdem werden einige nicht benötigte Beispiel-Applikationen gelöscht. Danach sollte Jetty auf Port 8008 laufen.
+
+\lstinputlisting[caption=Jetty Installation (2), label=lst:jettyinstall2, firstline=25, lastline=29]{listings/anleitungen/build-env-setup}
+
+\subsection{Jenkins Installation}
+
+Jenkins kann als War-Archive heruntergeladen und direkt ins Applikationsverzeichnis von Jetty kopiert werden (Listing \ref{lst:jenkinsinstall}).
+
+\lstinputlisting[caption=Jenkins Installation, label=lst:jenkinsinstall, firstline=33, lastline=36]{listings/anleitungen/build-env-setup}
+
+Damit Jenkins läuft muss noch ein SecurityHandler konfiguriert werden. Listing \ref{lst:jenkinssecurity} muss dazu nach '/opt/jetty/webapps/jenkins.xml' kopiert werden.
+
+\lstinputlisting[caption=Jenkins SecurityHandler Konfiguration (/opt/jetty/webapps/jenkins.xml), label=lst:jenkinssecurity, firstline=42, lastline=67]{listings/anleitungen/build-env-setup}
+
+Nach dem Einstellen der Berechtigungen und einem Neustart von Jetty sollte Jenkins laufen (Listing \ref{lst:jenkinsconfig}). Die Konfiguration von Jenkins wird später durchgeführt.
+
+\lstinputlisting[caption=Jenkins Konfiguration, label=lst:jenkinsconfig, firstline=69, lastline=70]{listings/anleitungen/build-env-setup}
+
+\subsection{Glassfish Installation}
+
+Auch für Glassfish wird zunächst ein neuer Benutzer angelegt. Anschliessend werden die Binaries heruntergeladen und installiert (Listing \ref{lst:glassfishinstall}).
+
+\lstinputlisting[caption=Glassfish Installation, label=lst:glassfishinstall, firstline=74, lastline=81]{listings/anleitungen/build-env-setup}
+
+Listing \ref{lst:glassfishconfig} richtet die Glassfish Domains ein. Zunächst wird die Standard Domain 'domain1' gelöscht. Anschliessend werden die beiden Domains 'test' und 'production' angelegt. Damit die beiden Domains parallel betrieben werden können, werden unterschiedliche Ports konfiguriert. Da Glassfish relativ viele Ports für unterschiedliche Zwecke benutzt, kann mit der '--portbase' Option eine Basis angegeben werden, auf der alle Ports basieren. Die wichtigsten Ports sind der Administrations-Port (+48) und der HTTP-Port (+80). Listing \ref{lst:glassfishconfig} startet die beiden Domains ausserdem, um den Zugriff über die Webconsole zu aktivieren, und stoppt sie anschliessend gleich wieder. Da für das Erstellen der Domains Benutzernamen und Passwörter für den Administrations-Zugriff konfiguriert werden müssen, sollten die Befehle einzeln eingegeben werden.
+
+\lstinputlisting[caption=Glassfish Domain Konfiguration, label=lst:glassfishconfig, firstline=85, lastline=93]{listings/anleitungen/build-env-setup}
+
+Um die beiden Glassfish Domains als Services zu betreiben werden nun zwei Start-Skripte erstellt (Listing \ref{lst:startuptest} und \ref{lst:startupproduction}) und anschliessend die Services installiert (Listing \ref{lst:glassfishservice}).
+
+\lstinputlisting[caption=Start-Skript 1 (/opt/glassfish/bin/glassfish-test.sh), label=lst:startuptest, firstline=99, lastline=131]{listings/anleitungen/build-env-setup}
+
+\lstinputlisting[caption=Start-Skript 2 (/opt/glassfish/bin/glassfish-production.sh), label=lst:startupproduction, firstline=137, lastline=169]{listings/anleitungen/build-env-setup}
+
+\lstinputlisting[caption=Glassfish Service Konfiguration, label=lst:glassfishservice, firstline=171, lastline=175]{listings/anleitungen/build-env-setup}
+
+\subsection{MySQL Installation}
+
+MySQL kann wiederum direkt via Paketverwaltung installiert werden (Listing \ref{lst:mysqlinstall}).
+
+\lstinputlisting[caption=MySQL Installation, label=lst:mysqlinstall, firstline=179, lastline=179]{listings/anleitungen/build-env-setup}
+
+Falls der Zugriff von extern gewünscht ist muss in der Konfigurationsdatei '/etc/mysql/my.conf' die Zeile 'bind-address = 127.0.0.1' auskommentiert werden. Damit Glassfish Applikationen auf MySQL zugreifen können, muss zunächst noch der Treiber installiert werden (Listing \ref{lst:mysqldriver}).
+
+\lstinputlisting[caption=MySQL Treiber Installation, label=lst:mysqldriver, firstline=189, lastline=195]{listings/anleitungen/build-env-setup}
+
+\section{Continuous Integration}
+
+\todo{Einleitung schreiben}
+
+\subsection{SSH Zugriff auf Repository einrichten}
+
+Um den Build durch Jenkins zu automatisieren, muss Jenkins zunächst einmal Zugriff auf die aktuellen Sourcen erhalten. Für das Projekt wird ein Git Repository verwendet; genauer gesagt ein privates Git Repository auf GitHub. Damit für den Zugriff auf das Repository keine Passwörter hinterlegt werden müssen, bietet GitHub die Möglichkeit per SSH auf die Repositories zuzugreifen. Dazu muss auf dem Buildserver ein SSH Schlüssel erzeugt werden, der anschliessend bei GitHub hinterlegt werden kann. Listing \ref{lst:sshkey} führt alle nötigen Schritte aus, um einen Schlüssel für den Jetty Benutzer zu erzeugen, unter dem Jenkins läuft. Wichtig ist dass bei der Erzeugung des Schlüssels kein Passwort eingegeben wird, da Jenkins dies nicht unterstützt.
+
+\lstinputlisting[caption=SSH Schlüssel erzeugen, label=lst:sshkey, firstline=3, lastline=4]{listings/anleitungen/continuous-integration}
+
+Anschliessend sollte für den Zugriff auf das Repository ein SSH Host Alias angelegt werden (Listing \ref{lst:sshconfig}. Dieser Schritt ist nicht zwingend notwendig. Wenn kein Host Alias eingerichtet wird, wird der erzeugte SSH Schlüssel für den Zugriff auf alle GitHub Repositories verwendet. Ein SSH Schlüssel kann jedoch nur für ein Repository hinterlegt werden, was spätestens beim Zugriff auf mehrere GitHub Repositories zu einem Problem führen würde.
+
+\lstinputlisting[caption=SSH Host Alias (/home/jetty/.ssh/config), label=lst:sshconfig, firstline=10, lastline=13]{listings/anleitungen/continuous-integration}
+
+Zum Schluss werden mit Listing \ref{lst:sshrights} die Berechtigungen für die erzeugten Dateien korrekt gesetzt.
+
+\lstinputlisting[caption=Berechtigungen setzen, label=lst:sshrights, firstline=17, lastline=18]{listings/anleitungen/continuous-integration}
+
+Für den Zugriff muss der öffentliche Teil des SSH Schlüssels (/home/jetty/.ssh/24RoadPack-deploy.pub) nun auf GitHub hinterlegt werden. Danach kann der Zugriff über die Konsole getestet werden (Listing \ref{lst:sshtest}). Beim ersten Zugriff muss zudem das Zertifikat von GitHub akzeptiert werden, ansonsten wird der Zugriff durch Jenkins später auch nicht funktionieren.
+
+\lstinputlisting[caption=SSH Zugriff testen, label=lst:sshtest, firstline=20, lastline=22]{listings/anleitungen/continuous-integration}
+
+\subsection{Automatisierten Build konfigurieren}
+
+Damit der Build durch Jenkins automatisiert werden kann, müssen zunächst einige Jenkins Plugins installiert werden, sofern diese nicht bereits installiert sind. Die benötigten Plugins sind: Maven 2 Project Plugin, Jenkins GIT plugin und Jenkins GIT client plugin. Die Plugins können direkt über die Weboberfläche von Jenkins installiert werden.
+
+Anschliessend muss sichergestellt werden, dass Jenkins auf die Installationen von Maven und Git zugreifen kann. Auch dies kann über die Weboberfläche verifiziert werden. Falls Jenkins die Installationen nicht finden kann bzw. Maven oder Git nicht installiert sind, kann dies ebenfalls direkt über die Weboberfläche nachgeholt werden. Dazu muss in der Systemkonfiguration lediglich eine Installation hinzugefügt und die Konfiguration gespeichert werden. Den Rest erledigt Jenkins automatisch.
+
+Wenn diese beiden Schritte erledigt sind, kann mit dem eigentlichen Anlegen eines neuen Maven Jobs begonnen werden. Folgende Einstellungen müssen vorgenommen werden, damit der automatische Build funktioniert:
+\begin{itemize}
+	\item Git als Source Code Management Tool auswählen.
+	\item Das Git Repository angeben, das verwendet werden soll.
+	\item Als Build-Auslöser 'Source Code Management System abfragen' auswählen und ein passendes Zeitintervall konfigurieren.
+	\item Unter Build den Pfad zum Stamm-POM angeben.
+\end{itemize}
+
+Anschliessend kann der Build testweise gestartet werden. Jenkins sollte nun nach jeder Änderung automatisch einen Build starten.
+
+\todo{Bildchen machen :)}
+
+\subsection{Automatisiertes Deployment konfigurieren}
+
+Um die Applikation nach einem erfolgreichen Build von Jenkins deployen zu lassen, muss ein weiteres Plugin installiert werden. Das Deploy to container Plugin erlaubt das automatische Deployment von Applikationen auf z.B. Tomcat und Glassfish Server.
+
+Nach der Installation des Plugins muss der bestehende Job angepasst werden. In der Konfiguration kann nun unter Post-Build-Aktionen eine Aktion vom Typ Deploy war/ear to container ausgewählt werden. Für die Aktion müssen anschliessend noch folgende Einstellungen vorgenommen werden:
+\begin{itemize}
+	\item Unter WAR/EAR files muss der Pfad zum war bzw. ear File angegeben werden, das deployed werden soll.
+	\item Als Container Glassfish 3.x auswählen.
+	\item Manager Benutzername und Passwort angeben.
+	\item Unter Glassfish home muss der Pfad zu einer lokalen Glassfish Installation angegeben werden. Falls nicht auf einen lokalen Server deployed wird, muss hier angegeben werden wo sich die asadmin-Tools befinden, die zur Verwaltung von Glassfish Servern verwendet werden.
+	\item Glassfish Addresse und Port angeben (auch bei lokaler Installation wichtig).
+\end{itemize}
+
+Nach dem Speichern der Einstellungen sollte Jenkins nach jedem erfolgreichen Build die Applikation deployen.
+
+\todo{Bildchen machen :)}
+
+\section{Metriken}
+
+\todo{Einleitung}
+
+\subsection{Checkstyle}
+
+Checkstyle kann über ein Maven Plugin direkt in den Build-Prozess integriert werden. Dazu muss das Maven Plugin lediglich im pom.xml geladen und konfiguriert werden. Listing \ref{lst:checkstylebuild} konfiguriert das Maven Plugin so, dass es während der Compile-Phase des Builds ausgeführt wird und die zur Verfügung gestellte Konfigurationsdatei verwendet. Ausserdem wird das Plugin so konfiguriert dass der Build trotz Checksytle Verletzungen weitergeführt wird. Die von Checkstyle durchgeführten Checks können in der Konfigurationsdatei aktiviert bzw. deaktiviert und konfiguriert werden. Die zur Verfügung stehenden Checks und Konfigurationsmöglichkeiten sind unter http://checkstyle.sourceforge.net/checks.html nachzulesen.
+
+\lstinputlisting[caption=Checkstyle aktivieren, label=lst:checkstylebuild, firstline=4, lastline=29]{listings/anleitungen/metriken}
+
+Damit NetBeans die Resultate von Checkstyle verwendet um entsprechende Warnungen anzuzeigen, muss ein NetBeans Plugin installiert werden. Das mitgelieferte Plugin erfordert veraltete Checkstyle Konfigurationen, deshalb sollte ein anderes Plugin verwendet werden. Dazu muss in NetBeans unter Tools -> Plugins -> Settings ein neues Update Center hinzugefügt werden (Listing \ref{lst:netbeanssqe}). Danach kann das Plugin 'Checkstyle' installiert werden. Es erkennt automatisch die Checkstyle Konfiguration des Projekts und zeigt entsprechende Checksytle Warnungen an.
+
+\lstinputlisting[caption=NetBeans SQE Update Center Einstellungen, label=lst:netbeanssqe, firstline=33, lastline=34]{listings/anleitungen/metriken}
+
+Damit Jenkins die Resultate von Checkstyle visualisiert, müssen folgende Plugins installiert werden: Static Analysis Utilities, Checkstyle Plugin-In, Static Analysis Collector Plug-In. Anschliessend müssen die Plugins in der Konfiguration des Jenkins Jobs aktiviert werden.
+
+\subsection{Code Coverage mit Cobertura}
+
+\lstinputlisting[caption=Cobertura aktivieren, label=lst:coberturabuild, firstline=38, lastline=73]{listings/anleitungen/metriken}

@@ -1,0 +1,108 @@
+% KOMA-Script Klasse 'scrreprt' inkl. Einstellungen
+\documentclass[
+	pdftex,
+	a4paper,
+	oneside,
+	12pt,
+	% Tabellen- und Abbildungsverzeichnis im Inhaltsverzeichnis anzeigen
+	listof=numbered,
+	% Litaraturverzeichnis im Inhaltsverzeichnis
+	bibliography=totocnumbered
+]{scrreprt}
+
+% Ändern der Seitenränder
+\usepackage[a4paper, left=3cm, right=2cm, top=2.5cm, bottom=3.5cm]{geometry}
+
+% Zeichencodierung und Zeichensatz
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% Verwendung der neuen deutschen Rechtschreibung
+\usepackage[ngerman]{babel}
+
+% Verwendung von schweizer Anführungszeichen
+\usepackage[style=swiss]{csquotes}
+
+% Umlaute in Bibtex
+%\usepackage{bibgerm} todo: replace with babelbib
+% Bibtex Style
+\bibliographystyle{plain}
+
+% Typografische Feinheiten
+\usepackage[final]{microtype}
+
+% Schriftart
+\usepackage{lmodern}
+
+% Absätze durch Leerraum trennen
+\usepackage{parskip}
+
+% Zeilenabstand 1.5
+\usepackage{setspace}
+\onehalfspacing
+
+% Einbindung von Grafiken ermöglichen
+\usepackage{graphicx}
+% Standard Pfad für Grafiken
+\graphicspath{{images/}}
+
+% Verwendung von Farben ermöglichen
+\usepackage[usenames,dvipsnames]{color}
+
+% Verwendung von PDF Features
+\usepackage{hyperref}
+% PDF Links aktivieren
+\hypersetup{
+	colorlinks=true,
+	linkcolor=Black,
+	citecolor=Black,
+	filecolor=Black,
+	menucolor=Black,
+	urlcolor=Black,
+	bookmarksnumbered=true
+}
+% Link springt auf Bild anstatt Beschriftung
+\usepackage[all]{hypcap}
+
+% Inkludieren von Sourcecode Files
+\usepackage{listings}
+\renewcommand{\lstlistlistingname}{Quellcodeverzeichnis}
+\definecolor{LineNumberColor}{rgb}{0.8,0.8,0.8}
+\lstset{
+	breaklines=true,
+	numbers=left,
+	tabsize=2,
+	basicstyle=\footnotesize\ttfamily,
+	numberstyle=\color{LineNumberColor}\ttfamily,
+	frame=bottomline
+}
+% Syntax Highlighting für Java
+\definecolor{JavaStringColor}{rgb}{0.6,0,0}
+\definecolor{JavaCommentColor}{rgb}{0.25,0.5,0.35}
+\definecolor{JavaKeywordColor}{rgb}{0.5,0,0.35}
+\definecolor{JavaDocColor}{rgb}{0.25,0.35,0.75}
+\lstdefinestyle{customjava}{
+	language=Java,
+	keywordstyle=\bfseries\color{JavaKeywordColor},
+	stringstyle=\color{JavaStringColor},
+	commentstyle=\color{JavaCommentColor},
+	morecomment=[s][\color{JavaDocColor}]{/**}{*/},
+	showstringspaces=false,
+}
+
+% Erlaubt einfachere Berechnungen
+\usepackage{calc}
+
+% Erweiterte Überschriften von Bildern und Listings
+\usepackage{caption}
+% Überschrift für Listings neu definieren
+\DeclareCaptionFont{whitefont}{\color{white}}
+\DeclareCaptionFormat{listing}{\colorbox{black}{\parbox{\textwidth-2\fboxsep}{\hspace{5pt}#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=whitefont,textfont=whitefont, singlelinecheck=false, margin=0pt, font={bf,footnotesize}}
+% Hinweis zur Breite der Caption: \colorbox fügt an den Aussenseiten Space der Länge \fboxsep ein, wodurch die \parbox mit Länge \textwidth zu breit wird. Deshalt wird von \textwidth zwei mal \fboxsep abgezogen.
+
+% Durchstreichen von Text
+\usepackage{ulem}
+
+% Einbindung von Blindtext
+\usepackage{blindtext}
